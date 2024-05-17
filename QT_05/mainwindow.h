@@ -21,19 +21,16 @@ public:
     ~MainWindow();
     
 public slots:
-    void stopwatch_ding(const unsigned int value);
+    void stopwatch_ding(QString new_value);
     
 private slots:
     void on_clb_start_stop_clicked(bool checked);
     void on_clb_reset_clicked();
     void on_clb_round_clicked();
     
-private:    
-    QString toTimeStrFormat(const unsigned int milliseconds);
-    
+private:
     Ui::MainWindow *ui;
-    Signals* sig;
-    std::unique_ptr<Stopwatch> stopwatch;
+    Stopwatch* stopwatch;
     
     unsigned int displayed_resolution; // ms
     QIcon start_icon;
@@ -41,6 +38,7 @@ private:
     QIcon reset_icon;
     QIcon round_icon;
     
+    /*
     class Increment
     {
     public:
@@ -52,5 +50,6 @@ private:
     };
     Increment incr;
     unsigned int last_round_value; // ms
+    */
 };
 #endif // MAINWINDOW_H

@@ -1,43 +1,38 @@
 #ifndef STOPWATCH_H
 #define STOPWATCH_H
 
-#include <thread>
-#include <atomic>
-#include <condition_variable>
-#include <mutex>
+#include <QObject>
+#include <QTimer>
 
-#include "signals.h"
-
-class Stopwatch
+class Stopwatch : public QObject
 {
+    Q_OBJECT
+    
 public:
-    Stopwatch(const unsigned int resolution_in_milliseconds, Signals* associated_recieving_obj);
-    ~Stopwatch();
+    explicit Stopwatch( unsigned int resolution_in_milliseconds, QObject* parent = nullptr);
     
     void start();
     void stop();
-    void reset();
+    QString reset();
+    QString round();
     
-    unsigned int get_current();
+    void primaryHandshake();
+    
+public slots:
+    void onTimerTimeout();
+    
+signals:
+    void ding(QString new_value);
     
 private:
-    static void stand_by(Stopwatch* sw);
-    void work();
-    void notify_ui();
+    QString toTimeStrFormat(const unsigned int milliseconds);
     
+    QTimer* timer;
     const unsigned int resolution; // ms
     
     unsigned int current_value; // ms
-    unsigned int current_portions_amount; // безразм.
-    
-    std::unique_ptr<std::thread> side_thread;
-    std::atomic<bool> working_status;
-    std::atomic<bool> stopped;
-    std::atomic<bool> destruct;
-    std::condition_variable start_cond;
-    std::mutex mut;
-    
-    Signals* associated_reciever;
+    unsigned int last_round_value; // ms
+    unsigned int round_number;
 };
 
 #endif // STOPWATCH_H

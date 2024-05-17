@@ -6,13 +6,10 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    sig = new Signals(this);
     
     displayed_resolution = 100; // ms
-    stopwatch = std::make_unique<Stopwatch>(displayed_resolution, sig);
-    last_round_value = 0; // ms
     
-    ui->tl_time_display->setText(toTimeStrFormat(0));
+    stopwatch = new Stopwatch(displayed_resolution, this);
     
     QPixmap start_pm("../icons/start.png");
     QPixmap stop_pm("../icons/stop.png");
@@ -34,7 +31,9 @@ MainWindow::MainWindow(QWidget *parent)
     
     ui->tb_rounds->setReadOnly(true);
     
-    QObject::connect(sig, &Signals::ding, this, &MainWindow::stopwatch_ding);
+    QObject::connect(stopwatch, &Stopwatch::ding, this, &MainWindow::stopwatch_ding);
+    
+    stopwatch->primaryHandshake();
 }
 
 
@@ -44,21 +43,9 @@ MainWindow::~MainWindow()
 }
 
 
-void MainWindow::stopwatch_ding(const unsigned int value)
+void MainWindow::stopwatch_ding(QString new_value)
 {
-    ui->tl_time_display->setText(toTimeStrFormat(value));
-}
-
-
-QString MainWindow::toTimeStrFormat(const unsigned int milliseconds)
-{
-    const unsigned int minutes = milliseconds / 60000;
-    const unsigned int seconds = (milliseconds % 60000) / 1000;
-    const unsigned int portions_of_second = (milliseconds % 1000) / displayed_resolution;
-    
-    return (minutes < 10 ? "0" + QString::number(minutes) : QString::number(minutes)) + ":" + 
-            (seconds < 10 ? "0" + QString::number(seconds) : QString::number(seconds)) + "." + 
-            QString::number(portions_of_second);
+    ui->tl_time_display->setText(new_value);
 }
 
 
@@ -77,22 +64,17 @@ void MainWindow::on_clb_start_stop_clicked(bool checked)
         ui->clb_start_stop->setText("Старт");
     }
     ui->clb_round->setEnabled(checked);
-    ui->clb_reset->setEnabled(!checked);
 }
 
 
 void MainWindow::on_clb_reset_clicked()
 {
-    stopwatch->reset();
-    incr.reset();
-    last_round_value = 0;
+    ui->tl_time_display->setText(stopwatch->reset());
 }
 
 
 void MainWindow::on_clb_round_clicked()
 {
-    unsigned int current_value = stopwatch->get_current();
-    ui->tb_rounds->append("Круг №" + QString::number(incr()) + ", время: " + toTimeStrFormat(current_value - last_round_value) + " сек");
-    last_round_value = current_value;
+    ui->tb_rounds->append(stopwatch->round());
 }
 
